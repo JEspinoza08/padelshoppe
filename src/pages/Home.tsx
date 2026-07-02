@@ -13,25 +13,45 @@ import { Product, Category } from "../data/products";
 
 export default function Home() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(
+    null,
+  );
   const [searchQuery, setSearchQuery] = useState("");
-  const scrollToProducts = () => document.getElementById("productos")?.scrollIntoView({ behavior: "smooth" });
+  const scrollToProducts = () =>
+    document
+      .getElementById("productos")
+      ?.scrollIntoView({ behavior: "smooth" });
   const handleCategorySelect = (categoryId: string) => {
-    if (categoryId === "ofertas") { setSelectedCategory(null); setTimeout(scrollToProducts, 80); return; }
-    setSelectedCategory(categoryId as Category); setTimeout(scrollToProducts, 80);
+    if (categoryId === "ofertas") {
+      setSelectedCategory(null);
+      setTimeout(scrollToProducts, 80);
+      return;
+    }
+    setSelectedCategory(categoryId as Category);
+    setTimeout(scrollToProducts, 80);
   };
+
   return (
     <div className="min-h-screen bg-white text-neutral-950">
       <Header onSearch={setSearchQuery} />
       <Hero onShopNow={scrollToProducts} />
       <Benefits />
       <Categories onSelect={handleCategorySelect} />
-      <ProductsSection onViewDetail={setSelectedProduct} initialCategory={selectedCategory} searchQuery={searchQuery} />
+      <ProductsSection
+        onViewDetail={setSelectedProduct}
+        initialCategory={selectedCategory}
+        searchQuery={searchQuery}
+      />
       <CatBanner onViewDetail={setSelectedProduct} />
       <Trust />
       <Contact />
       <Footer />
-      {selectedProduct && <ProductModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />}
+      {selectedProduct && (
+        <ProductModal
+          product={selectedProduct}
+          onClose={() => setSelectedProduct(null)}
+        />
+      )}
     </div>
   );
 }

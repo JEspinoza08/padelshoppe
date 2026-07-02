@@ -1,11 +1,17 @@
 import { useEffect } from "react";
-import { X, MessageCircle, Check, Star } from "lucide-react";
-import { Product, buildWhatsAppUrl } from "../data/products";
+import { X, ShoppingCart, Check, Star } from "lucide-react";
+import { Product } from "../data/products";
+import { useCart } from "../context/CartContext";
+
 interface ProductModalProps {
   product: Product | null;
   onClose: () => void;
 }
-export default function ProductModal({ product, onClose }: ProductModalProps) {
+
+export default function ProductModal({
+  product,
+  onClose,
+}: ProductModalProps) {
   useEffect(() => {
     if (!product) return;
     document.body.style.overflow = "hidden";
@@ -18,7 +24,12 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
       window.removeEventListener("keydown", esc);
     };
   }, [product, onClose]);
+  const { addToCart } = useCart();
+
   if (!product) return null;
+  
+  const hasStock = Number(product.stock) > 0;
+  
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 animate-fade-in"
@@ -80,6 +91,17 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
                 </span>
               )}
             </div>
+            <div className="mt-3">
+  {hasStock ? (
+    <span className="inline-flex rounded-full bg-green-100 px-3 py-1 text-xs font-black uppercase text-green-700">
+      Con stock
+    </span>
+  ) : (
+    <span className="inline-flex rounded-full bg-red-100 px-3 py-1 text-xs font-black uppercase text-red-700">
+      Sin stock
+    </span>
+  )}
+</div>
             <p className="mt-5 text-sm leading-relaxed text-neutral-600">
               {product.description}
             </p>
@@ -119,14 +141,22 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
               </span>
             </div>
             <div className="mt-8 grid gap-3 sm:grid-cols-[1fr_auto]">
-              <a
-                href={buildWhatsAppUrl(product.name, product.price)}
-                target="_blank"
-                rel="noreferrer"
-                className="padel-btn gap-2"
-              >
-                <MessageCircle size={18} /> Agregar al carrito
-              </a>
+              <button
+  type="button"
+  disabled={!hasStock}
+  onClick={() => {
+    if (!hasStock) return;
+
+    addToCart(product);
+    onClose();
+  }}
+  className={`padel-btn gap-2 ${
+    !hasStock ? "cursor-not-allowed opacity-50" : ""
+  }`}
+>
+  <ShoppingCart size={18} />
+  {hasStock ? "Agregar al carrito" : "Sin stock"}
+</button>
             </div>
           </div>
         </div>

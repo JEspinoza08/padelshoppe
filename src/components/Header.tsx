@@ -1,8 +1,11 @@
 import { useState } from 'react';
-import { Menu, X, Search, ShoppingBag, User, Instagram, MessageCircle } from 'lucide-react';
+import { Menu, X, Search, ShoppingBag, User, MessageCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { buildWhatsAppAdvisorUrl } from '../data/products';
 import logo from "../assets/logo.png";
+import { useAuth } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
+import CartDrawer from "./CartDrawer";
 
 const navLinks = [
   { label: 'Palas', href: '/palas' },
@@ -28,6 +31,9 @@ export default function Header({ onSearch }: HeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
   const navigate = useNavigate();
+  const { user, fullName } = useAuth();
+  const { totalItems } = useCart();
+  const [cartOpen, setCartOpen] = useState(false);
 
   const go = (href: string) => {
     setMobileOpen(false);
@@ -68,12 +74,27 @@ export default function Header({ onSearch }: HeaderProps) {
       </nav>
 
       <div className="ml-auto flex items-center gap-5 text-neutral-950 lg:ml-0">
-        <button
-          aria-label="Cuenta"
-          className="hidden place-items-center rounded-full transition hover:text-[#f04b2f] sm:grid"
-        >
-          <User size={23} strokeWidth={1.5} />
-        </button>
+        {user ? (
+  <button
+    aria-label="Mi cuenta"
+    onClick={() => navigate("/mi-cuenta")}
+    className="hidden items-center gap-2 rounded-full transition hover:text-[#f04b2f] sm:flex"
+  >
+    <User size={23} strokeWidth={1.5} />
+
+    <span className="text-sm font-medium">
+  {fullName ?? "Mi cuenta"}
+</span>
+  </button>
+) : (
+  <button
+    aria-label="Cuenta"
+    onClick={() => navigate("/login")}
+    className="hidden place-items-center rounded-full transition hover:text-[#f04b2f] sm:grid"
+  >
+    <User size={23} strokeWidth={1.5} />
+  </button>
+)}
 
         <button
           aria-label="Buscar"
@@ -86,11 +107,18 @@ export default function Header({ onSearch }: HeaderProps) {
         </button>
 
         <button
-          aria-label="Carrito"
-          className="relative grid place-items-center rounded-full transition hover:text-[#f04b2f]"
-        >
-          <ShoppingBag size={23} strokeWidth={1.5} />
-        </button>
+  aria-label="Carrito"
+  onClick={() => setCartOpen(true)}
+  className="relative grid place-items-center rounded-full transition hover:text-[#f04b2f]"
+>
+  <ShoppingBag size={23} strokeWidth={1.5} />
+
+  {totalItems > 0 && (
+    <span className="absolute -right-2 -top-2 grid h-5 min-w-5 place-items-center rounded-full bg-[#f04b2f] px-1 text-[10px] font-black text-white">
+      {totalItems}
+    </span>
+  )}
+</button>
 
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
@@ -141,6 +169,7 @@ export default function Header({ onSearch }: HeaderProps) {
         </div>
       </div>
     )}
+    <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
   </header>
 );
 }

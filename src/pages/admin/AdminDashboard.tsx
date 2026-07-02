@@ -131,6 +131,12 @@ export default function AdminDashboard() {
               <Plus size={18} /> Nuevo producto
             </button>
             <button
+  onClick={() => navigate("/admin/orders")}
+  className="inline-flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 py-3"
+>
+  Pedidos
+</button>
+            <button
               onClick={handleLogout}
               className="inline-flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 py-3"
             >

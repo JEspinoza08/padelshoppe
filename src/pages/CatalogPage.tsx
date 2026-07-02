@@ -39,9 +39,9 @@ export default function CatalogPage({ title, subtitle, category }: CatalogPagePr
 
       {selectedProduct && (
         <ProductModal
-          product={selectedProduct}
-          onClose={() => setSelectedProduct(null)}
-        />
+  product={selectedProduct}
+  onClose={() => setSelectedProduct(null)}
+/>
       )}
     </div>
   );
