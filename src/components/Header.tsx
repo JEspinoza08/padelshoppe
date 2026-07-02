@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Menu, X, Search, ShoppingBag, User, Instagram, MessageCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { buildWhatsAppAdvisorUrl } from '../data/products';
+import logo from "../assets/logo.png";
 
 const navLinks = [
   { label: 'Palas', href: '/palas' },
@@ -16,12 +17,13 @@ interface HeaderProps { onSearch: (query: string) => void; }
 
 function BrandLogo() {
   return (
-    <span className="inline-flex items-center text-[22px] font-black tracking-[-0.04em] leading-none">
-      <span className="text-black">PADEL</span><span className="text-[#f04b2f]">SHOP</span>
-    </span>
+    <img
+      src={logo}
+      alt="PadelShop Perú"
+      className="h-16 w-auto object-contain"
+    />
   );
 }
-
 export default function Header({ onSearch }: HeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
@@ -41,52 +43,104 @@ export default function Header({ onSearch }: HeaderProps) {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white shadow-[0_1px_0_rgba(0,0,0,0.08)]">
-      <div className="bg-[#080808] text-white">
-        <div className="padel-container flex h-[34px] items-center justify-between text-[11px] font-black uppercase tracking-[0.08em]">
-          <span className="mx-auto sm:mx-0">🚚 Envíos a todo el Perú</span>
-          <div className="hidden sm:flex items-center gap-4 text-white/80">
-            <a href="https://instagram.com/padelshop.pe" target="_blank" rel="noreferrer" aria-label="Instagram" className="hover:text-[#f04b2f]"><Instagram size={14} /></a>
-            <a href={buildWhatsAppAdvisorUrl()} target="_blank" rel="noreferrer" aria-label="WhatsApp" className="hover:text-[#f04b2f]"><MessageCircle size={14} /></a>
-          </div>
-        </div>
+  <header className="sticky top-0 z-50 bg-white">
+    <div className="h-[6px] bg-[#f04b2f]" />
+
+    <div className="padel-container flex h-[92px] items-center">
+      <Link
+        to="/"
+        className="flex shrink-0 items-center"
+        aria-label="PadelShop Perú"
+      >
+        <BrandLogo />
+      </Link>
+
+      <nav className="mx-auto hidden items-center gap-10 text-[14px] font-medium text-neutral-800 lg:flex">
+        {navLinks.map((link) => (
+          <button
+            key={link.href}
+            onClick={() => go(link.href)}
+            className="transition hover:text-[#f04b2f]"
+          >
+            {link.label}
+          </button>
+        ))}
+      </nav>
+
+      <div className="ml-auto flex items-center gap-5 text-neutral-950 lg:ml-0">
+        <button
+          aria-label="Cuenta"
+          className="hidden place-items-center rounded-full transition hover:text-[#f04b2f] sm:grid"
+        >
+          <User size={23} strokeWidth={1.5} />
+        </button>
+
+        <button
+          aria-label="Buscar"
+          onClick={() =>
+            document.getElementById("mobile-search")?.classList.toggle("hidden")
+          }
+          className="grid place-items-center rounded-full transition hover:text-[#f04b2f]"
+        >
+          <Search size={26} strokeWidth={1.4} />
+        </button>
+
+        <button
+          aria-label="Carrito"
+          className="relative grid place-items-center rounded-full transition hover:text-[#f04b2f]"
+        >
+          <ShoppingBag size={23} strokeWidth={1.5} />
+        </button>
+
+        <button
+          onClick={() => setMobileOpen(!mobileOpen)}
+          className="grid place-items-center rounded-full lg:hidden"
+        >
+          {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
       </div>
+    </div>
 
-      <div className="padel-container flex h-[70px] items-center gap-7">
-        <Link to="/" className="flex items-center shrink-0" aria-label="PadelShop Perú">
-          <BrandLogo />
-        </Link>
+    <form
+      id="mobile-search"
+      onSubmit={submit}
+      className="hidden border-t border-neutral-100 bg-white px-7 py-4"
+    >
+      <div className="flex items-center rounded-full border border-neutral-200 px-5 py-3">
+        <input
+          value={searchValue}
+          onChange={(e) => setSearchValue(e.target.value)}
+          placeholder="Buscar productos..."
+          className="w-full bg-transparent text-sm outline-none"
+        />
+        <Search size={18} />
+      </div>
+    </form>
 
-        <nav className="hidden lg:flex items-center gap-7 text-[12px] font-black uppercase tracking-[-0.01em]">
+    {mobileOpen && (
+      <div className="border-t border-neutral-200 bg-white lg:hidden">
+        <div className="space-y-2 px-7 py-4">
           {navLinks.map((link) => (
-            <button key={link.href} onClick={() => go(link.href)} className="text-neutral-950 hover:text-[#f04b2f] transition">{link.label}</button>
+            <button
+              key={link.href}
+              onClick={() => go(link.href)}
+              className="block w-full rounded-xl px-4 py-3 text-left text-sm font-semibold uppercase hover:bg-neutral-50"
+            >
+              {link.label}
+            </button>
           ))}
-        </nav>
 
-        <form onSubmit={submit} className="ml-auto hidden md:flex w-[330px] items-center rounded-full border border-neutral-200 bg-white px-5 py-2.5 shadow-[0_1px_10px_rgba(0,0,0,0.04)] focus-within:border-[#f04b2f]">
-          <input value={searchValue} onChange={(e) => setSearchValue(e.target.value)} placeholder="Buscar productos..." className="w-full bg-transparent text-[13px] text-neutral-900 outline-none placeholder:text-neutral-400" />
-          <Search size={17} className="text-neutral-600" />
-        </form>
-
-        <div className="flex items-center gap-3 text-neutral-950">
-          <button aria-label="Cuenta" className="hidden sm:grid h-9 w-9 place-items-center rounded-full hover:bg-neutral-100"><User size={19} /></button>
-          <button aria-label="Carrito" className="relative grid h-9 w-9 place-items-center rounded-full hover:bg-neutral-100"><ShoppingBag size={19} /><span className="absolute -right-0.5 top-0 h-3 w-3 rounded-full bg-[#f04b2f] ring-2 ring-white" /></button>
-          <button onClick={() => setMobileOpen(!mobileOpen)} className="lg:hidden grid h-9 w-9 place-items-center rounded-full bg-neutral-950 text-white">{mobileOpen ? <X size={18} /> : <Menu size={18} />}</button>
+          <a
+            href={buildWhatsAppAdvisorUrl()}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center justify-center gap-2 rounded-xl bg-[#25D366] px-4 py-3 font-black text-white"
+          >
+            <MessageCircle size={18} /> WhatsApp
+          </a>
         </div>
       </div>
-
-      {mobileOpen && (
-        <div className="border-t border-neutral-200 bg-white lg:hidden">
-          <div className="padel-container py-4 space-y-2">
-            <form onSubmit={submit} className="mb-3 flex items-center rounded-full border border-neutral-200 bg-neutral-50 px-4 py-2">
-              <input value={searchValue} onChange={(e) => setSearchValue(e.target.value)} placeholder="Buscar productos..." className="w-full bg-transparent text-sm outline-none" />
-              <Search size={16} />
-            </form>
-            {navLinks.map((link) => <button key={link.href} onClick={() => go(link.href)} className="block w-full rounded-xl px-4 py-3 text-left text-sm font-black uppercase hover:bg-neutral-50">{link.label}</button>)}
-            <a href={buildWhatsAppAdvisorUrl()} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 rounded-xl bg-[#25D366] px-4 py-3 font-black text-white"><MessageCircle size={18}/> WhatsApp</a>
-          </div>
-        </div>
-      )}
-    </header>
-  );
+    )}
+  </header>
+);
 }

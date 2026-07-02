@@ -15,8 +15,8 @@ import pala1 from "../assets/productos/optimizado/palas/AT10_Luxury_Genius_12K_A
 import categoria1 from "../assets/palas.webp";
 import categoria2 from "../assets/zapatillas.webp";
 import categoria3 from "../assets/bolsos.webp";
-import categoria4 from "../assets/accesorio.jpeg";
-import categoria5 from "../assets/ropa.jpg";
+import categoria4 from "../assets/accesorio.webp";
+import categoria5 from "../assets/ropa.webp";
 
 export interface Product {
   id: string | number;

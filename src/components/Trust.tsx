@@ -1,5 +1,5 @@
 import { Award, ShieldCheck, HeartHandshake } from 'lucide-react';
-import logo from '../assets/modelotrust.jpg';
+import logo from '../assets/modelotrust.webp';
 const items = [
   { icon: Award, title: 'Experiencia', desc: 'Años en el mundo del pádel.' },
   { icon: ShieldCheck, title: 'Calidad', desc: 'Solo productos originales.' },
