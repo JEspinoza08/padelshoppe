@@ -72,7 +72,6 @@ export default function CheckoutPage() {
   useEffect(() => {
     window.culqi = () => {
       if (window.Culqi?.token?.id) {
-        console.log("TOKEN CULQI:", window.Culqi.token);
         const tokenId = window.Culqi.token.id;
         window.Culqi.close();
         setIsProcessingPayment(true);
@@ -180,7 +179,6 @@ export default function CheckoutPage() {
   paymentData,
 });
 
-console.log("RESULTADO CREATE ORDER:", orderResult);
 
 const firstResult = Array.isArray(orderResult)
   ? orderResult[0]
@@ -194,7 +192,7 @@ const orderId =
       firstResult?.create_complete_order ??
       null;
 
-console.log("ORDER ID ENVIADO AL CORREO:", orderId);
+
 
 if (!orderId || typeof orderId !== "string") {
   console.error(
