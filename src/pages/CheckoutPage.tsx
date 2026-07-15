@@ -144,6 +144,33 @@ export default function CheckoutPage() {
       return false;
     }
 
+    if (!/^\d+$/.test(phone)) {
+  setToast({
+    type: "warning",
+    title: "Celular inválido",
+    message: "El número de celular solo debe contener números.",
+  });
+  return false;
+}
+
+if (phone.length !== 9) {
+  setToast({
+    type: "warning",
+    title: "Celular inválido",
+    message: "Ingresa un número de celular válido de 9 dígitos.",
+  });
+  return false;
+}
+
+if (address.trim().length < 8) {
+  setToast({
+    type: "warning",
+    title: "Dirección muy corta",
+    message: "La dirección debe tener como mínimo 8 caracteres.",
+  });
+  return false;
+}
+
     if (cart.length === 0) {
       setToast({
         type: "error",
@@ -442,11 +469,17 @@ if (!orderId || typeof orderId !== "string") {
   />
 
   <input
-    value={phone}
-    onChange={(e) => setPhone(e.target.value)}
-    className="rounded-xl border p-4"
-    placeholder="Celular"
-  />
+  type="tel"
+  inputMode="numeric"
+  value={phone}
+  onChange={(e) => {
+    const onlyNumbers = e.target.value.replace(/\D/g, "");
+    setPhone(onlyNumbers.slice(0, 9));
+  }}
+  className="rounded-xl border p-4"
+  placeholder="Celular"
+  maxLength={9}
+/>
 
   <CustomSelect
     value={department}
@@ -482,11 +515,12 @@ if (!orderId || typeof orderId !== "string") {
   />
 
   <input
-    value={address}
-    onChange={(e) => setAddress(e.target.value)}
-    className="rounded-xl border p-4 md:col-span-2"
-    placeholder="Dirección / domicilio"
-  />
+  value={address}
+  onChange={(e) => setAddress(e.target.value)}
+  className="rounded-xl border p-4 md:col-span-2"
+  placeholder="Dirección / domicilio"
+  minLength={8}
+/>
 
   <input
     value={reference}
