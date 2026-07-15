@@ -37,6 +37,7 @@ export default function Register() {
         await supabase.functions.invoke("send-welcome-email", {
           body: {
             fullName,
+            email,
           },
         });
 
