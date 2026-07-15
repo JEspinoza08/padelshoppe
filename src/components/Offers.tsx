@@ -1,5 +1,6 @@
 import ProductsSection from "./ProductsSection";
 import { Product } from "../data/products";
+
 export default function Offers({
   onViewDetail,
 }: {
@@ -10,6 +11,7 @@ export default function Offers({
       onViewDetail={onViewDetail}
       initialCategory={null}
       searchQuery=""
+      offersOnly
     />
   );
 }

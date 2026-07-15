@@ -10,8 +10,10 @@ import Footer from "../components/Footer";
 import ProductModal from "../components/ProductModal";
 import CatBanner from "../components/CategoryBanner";
 import { Product, Category } from "../data/products";
+import { useNavigate } from "react-router-dom";
 
 export default function Home() {
+  const navigate = useNavigate();
  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
 const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
@@ -21,7 +23,8 @@ const [searchQuery, setSearchQuery] = useState("");
 const [selectedBrand, setSelectedBrand] = useState<string>("");
   const scrollToProducts = (brand?: string) => {
   if (brand) {
-    setSelectedBrand(brand);
+    navigate(`/palas?brand=${encodeURIComponent(brand)}`);
+    return;
   }
 
   document

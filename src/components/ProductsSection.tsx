@@ -9,6 +9,7 @@ interface ProductsSectionProps {
   initialCategory?: Category | null;
   searchQuery?: string;
   selectedBrand?: string;
+  offersOnly?: boolean;
 }
 const allCategories: { id: Category; label: string }[] = [
   { id: "palas", label: "Palas" },
@@ -22,6 +23,7 @@ export default function ProductsSection({
   initialCategory,
   searchQuery,
   selectedBrand,
+  offersOnly = false,
 }: ProductsSectionProps) {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(
     initialCategory || null,
@@ -70,31 +72,64 @@ export default function ProductsSection({
   useEffect(() => {
     if (initialCategory !== undefined) setSelectedCategory(initialCategory);
   }, [initialCategory]);
-  const filtered = useMemo(
-    () =>
-      products.filter((p) => {
-        if (selectedCategory && p.category !== selectedCategory) return false;
-        if (selectedBrands.length > 0 && !selectedBrands.includes(p.brand))
-          return false;
-        if (searchQuery?.trim()) {
-          const q = searchQuery.toLowerCase();
-          return (
-            p.name.toLowerCase().includes(q) ||
-            p.brand.toLowerCase().includes(q) ||
-            p.category.toLowerCase().includes(q)
-          );
-        }
-        return true;
-      }),
-    [products, selectedCategory, selectedBrands, searchQuery],
-  );
+  const filtered = useMemo(() => {
+    const result = products.filter((p) => {
+      if (offersOnly && !p.isOffer) return false;
+
+      if (selectedCategory && p.category !== selectedCategory) {
+        return false;
+      }
+
+      if (
+        selectedBrands.length > 0 &&
+        !selectedBrands.some(
+          (brand) =>
+            brand.trim().toLowerCase() === p.brand.trim().toLowerCase(),
+        )
+      ) {
+        return false;
+      }
+
+      if (searchQuery?.trim()) {
+        const q = searchQuery.trim().toLowerCase();
+
+        return (
+          p.name.toLowerCase().includes(q) ||
+          p.brand.toLowerCase().includes(q) ||
+          p.category.toLowerCase().includes(q)
+        );
+      }
+
+      return true;
+    });
+
+    if (!selectedCategory) {
+      return result;
+    }
+
+    return [...result].sort((a, b) => {
+      const aIsNox = a.brand.trim().toUpperCase() === "NOX";
+      const bIsNox = b.brand.trim().toUpperCase() === "NOX";
+
+      if (aIsNox && !bIsNox) return -1;
+      if (!aIsNox && bIsNox) return 1;
+
+      return 0;
+    });
+  }, [products, selectedCategory, selectedBrands, searchQuery, offersOnly]);
   const visibleProducts = showAllProducts
     ? filtered
     : filtered.slice(0, INITIAL_VISIBLE);
 
   useEffect(() => {
     setShowAllProducts(false);
-  }, [selectedCategory, selectedBrands, searchQuery, selectedBrand]);
+  }, [
+    selectedCategory,
+    selectedBrands,
+    searchQuery,
+    selectedBrand,
+    offersOnly,
+  ]);
 
   const toggleBrand = (b: string) =>
     setSelectedBrands((v) =>
@@ -168,11 +203,11 @@ export default function ProductsSection({
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 className="text-[25px] font-black uppercase tracking-[-0.04em] lg:text-[31px]">
-              Productos destacados
+              {offersOnly ? "Ofertas especiales" : "Productos destacados"}
             </h2>
             <div className="mt-4 flex gap-8 text-[12px] font-black uppercase">
               <span className="border-b-2 border-[#f04b2f] pb-2 text-[#f04b2f]">
-                Novedades
+                {offersOnly ? "Productos en oferta" : "Novedades"}
               </span>
             </div>
           </div>
