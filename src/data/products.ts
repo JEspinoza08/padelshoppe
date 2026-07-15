@@ -5,7 +5,7 @@ export type Category =
   | "accesorios"
   | "ropa"
   | "ofertas";
-export type Brand = "Adidas" | "NOX" | "Babolat";
+export type Brand = string;
 export type Level = "Principiante" | "Intermedio" | "Avanzado";
 export type PlayStyle = "Control" | "Potencia" | "Equilibrio";
 export type Weight = "Ligera" | "Pesada";
@@ -83,8 +83,6 @@ export const categories = [
   { id: "accesorios", label: "Accesorios", icon: "⚡", image: categoria4 },
   { id: "ropa", label: "Ropa Deportiva", icon: "👕", image: categoria5 },
 ];
-
-export const brands: Brand[] = ["Adidas", "NOX", "Babolat"];
 
 export const WHATSAPP_NUMBER = "51950221282";
 

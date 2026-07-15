@@ -1,6 +1,6 @@
 import { SlidersHorizontal, X } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
-import { brands, Product, Category } from "../data/products";
+import { Product, Category } from "../data/products";
 import { getProducts } from "../lib/productService";
 import ProductCard from "./ProductCard";
 
@@ -30,34 +30,43 @@ export default function ProductsSection({
   const [showFilters, setShowFilters] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
+  const availableBrands = useMemo(() => {
+    return Array.from(
+      new Set(
+        products
+          .map((product) => product.brand?.trim())
+          .filter((brand): brand is string => Boolean(brand)),
+      ),
+    ).sort((a, b) => a.localeCompare(b, "es"));
+  }, [products]);
   const INITIAL_VISIBLE = 8;
   const [showAllProducts, setShowAllProducts] = useState(false);
   useEffect(() => {
-  let mounted = true;
+    let mounted = true;
 
-  setLoadingProducts(true);
+    setLoadingProducts(true);
 
-  getProducts()
-    .then((data) => {
-      if (mounted) setProducts(data);
-    })
-    .catch((error) => {
-      console.error("Error cargando productos:", error);
-      if (mounted) setProducts([]);
-    })
-    .finally(() => {
-      if (mounted) setLoadingProducts(false);
-    });
+    getProducts()
+      .then((data) => {
+        if (mounted) setProducts(data);
+      })
+      .catch((error) => {
+        console.error("Error cargando productos:", error);
+        if (mounted) setProducts([]);
+      })
+      .finally(() => {
+        if (mounted) setLoadingProducts(false);
+      });
 
-  return () => {
-    mounted = false;
-  };
-}, []);
+    return () => {
+      mounted = false;
+    };
+  }, []);
   useEffect(() => {
-  if (selectedBrand) {
-    setSelectedBrands([selectedBrand]);
-  }
-}, [selectedBrand]);
+    if (selectedBrand) {
+      setSelectedBrands([selectedBrand]);
+    }
+  }, [selectedBrand]);
   useEffect(() => {
     if (initialCategory !== undefined) setSelectedCategory(initialCategory);
   }, [initialCategory]);
@@ -80,12 +89,12 @@ export default function ProductsSection({
     [products, selectedCategory, selectedBrands, searchQuery],
   );
   const visibleProducts = showAllProducts
-  ? filtered
-  : filtered.slice(0, INITIAL_VISIBLE);
+    ? filtered
+    : filtered.slice(0, INITIAL_VISIBLE);
 
- useEffect(() => {
-  setShowAllProducts(false);
-}, [selectedCategory, selectedBrands, searchQuery, selectedBrand]);
+  useEffect(() => {
+    setShowAllProducts(false);
+  }, [selectedCategory, selectedBrands, searchQuery, selectedBrand]);
 
   const toggleBrand = (b: string) =>
     setSelectedBrands((v) =>
@@ -120,20 +129,26 @@ export default function ProductsSection({
           Marcas
         </h4>
         <div className="space-y-2">
-          {brands.map((b) => (
-            <label
-              key={b}
-              className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-neutral-600"
-            >
-              <input
-                type="checkbox"
-                checked={selectedBrands.includes(b)}
-                onChange={() => toggleBrand(b)}
-                className="accent-[#f04b2f]"
-              />
-              {b}
-            </label>
-          ))}
+          {availableBrands.length > 0 ? (
+            availableBrands.map((brand) => (
+              <label
+                key={brand}
+                className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-neutral-600"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedBrands.includes(brand)}
+                  onChange={() => toggleBrand(brand)}
+                  className="accent-[#f04b2f]"
+                />
+                {brand}
+              </label>
+            ))
+          ) : (
+            <p className="text-sm text-neutral-400">
+              No hay marcas disponibles.
+            </p>
+          )}
         </div>
       </div>
       <button
@@ -183,28 +198,29 @@ export default function ProductsSection({
               </div>
             ) : (
               <>
-    <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">
-      {visibleProducts.map((product) => (
-        <ProductCard
-          key={product.id}
-          product={product}
-          onViewDetail={onViewDetail}
-        />
-      ))}
-    </div>
+                <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">
+                  {visibleProducts.map((product) => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      onViewDetail={onViewDetail}
+                    />
+                  ))}
+                </div>
 
-    {filtered.length > INITIAL_VISIBLE && (
-      <div className="mt-8 flex justify-center">
-        <button
-          onClick={() => setShowAllProducts((v) => !v)}
-          className="rounded-md bg-[#f04b2f] px-6 py-3 text-xs font-black uppercase text-white transition hover:bg-[#d93f25]"
-        >
-          {showAllProducts ? "Mostrar menos productos" : "Mostrar más productos"}
-        </button>
-      </div>
-    )}
-  </>
-              
+                {filtered.length > INITIAL_VISIBLE && (
+                  <div className="mt-8 flex justify-center">
+                    <button
+                      onClick={() => setShowAllProducts((v) => !v)}
+                      className="rounded-md bg-[#f04b2f] px-6 py-3 text-xs font-black uppercase text-white transition hover:bg-[#d93f25]"
+                    >
+                      {showAllProducts
+                        ? "Mostrar menos productos"
+                        : "Mostrar más productos"}
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

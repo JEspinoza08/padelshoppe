@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
   BadgeCheck,
@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
-import { brands, buildWhatsAppAdvisorUrl } from "../data/products";
+import { buildWhatsAppAdvisorUrl } from "../data/products";
 import { getProducts } from "../lib/productService";
 import type { Product } from "../data/products";
 
@@ -36,8 +36,25 @@ const brandInfo: Record<string, {
   },
 };
 
+const defaultBrandInfo = {
+  description:
+    "Productos seleccionados para jugadores que buscan calidad, rendimiento y confianza.",
+  idealFor: "Todo tipo de jugador",
+  level: "Todos los niveles",
+};
+
 export default function Brands() {
     const [dbProducts, setDbProducts] = useState<Product[]>([]);
+
+    const availableBrands = useMemo(() => {
+  return Array.from(
+    new Set(
+      dbProducts
+        .map((product) => product.brand?.trim())
+        .filter((brand): brand is string => Boolean(brand)),
+    ),
+  ).sort((a, b) => a.localeCompare(b, "es"));
+}, [dbProducts]);
 
 useEffect(() => {
   getProducts()
@@ -67,11 +84,11 @@ const normalizeBrand = (value?: string) =>
         </div>
 
         <div className="grid gap-5 md:grid-cols-3">
-          {brands.map((brand) => {
+          {availableBrands.map((brand) => {
             const totalProducts = dbProducts.filter(
   (p) => normalizeBrand(p.brand) === normalizeBrand(brand)
 ).length;
-            const info = brandInfo[brand];
+            const info = brandInfo[brand] ?? defaultBrandInfo;
 
             return (
               <Link
@@ -122,8 +139,8 @@ const normalizeBrand = (value?: string) =>
             </p>
 
             <div className="mt-8 space-y-4">
-              {brands.map((brand) => {
-                const info = brandInfo[brand];
+              {availableBrands.map((brand) => {
+  const info = brandInfo[brand] ?? defaultBrandInfo;
 
                 return (
                   <div
