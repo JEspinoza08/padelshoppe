@@ -57,6 +57,7 @@ export default function AdminOrders() {
         `
         id,
         customer_name,
+        customer_dni,
         customer_phone,
         customer_address,
         customer_department,
@@ -134,8 +135,8 @@ export default function AdminOrders() {
 
         alert(
           functionError?.error ||
-            error.message ||
-            "No se pudo actualizar el estado.",
+          error.message ||
+          "No se pudo actualizar el estado.",
         );
 
         return;
@@ -153,9 +154,9 @@ export default function AdminOrders() {
         prev.map((order) =>
           order.id === orderId
             ? {
-                ...order,
-                status: data.status || status,
-              }
+              ...order,
+              status: data.status || status,
+            }
             : order,
         ),
       );
@@ -274,17 +275,17 @@ export default function AdminOrders() {
       </div>
 
       {filteredOrders.length === 0 && (
-  <div className="mb-5 rounded-2xl border border-white/10 bg-zinc-900 p-8 text-center">
-    <Search className="mx-auto text-gray-500" size={36} />
+        <div className="mb-5 rounded-2xl border border-white/10 bg-zinc-900 p-8 text-center">
+          <Search className="mx-auto text-gray-500" size={36} />
 
-    <p className="mt-3 font-bold text-white">
-      No encontramos ese pedido.
-    </p>
-  </div>
-)}
+          <p className="mt-3 font-bold text-white">
+            No encontramos ese pedido.
+          </p>
+        </div>
+      )}
 
-<div className="space-y-5">
-  {filteredOrders.map((order) => {
+      <div className="space-y-5">
+        {filteredOrders.map((order) => {
           const paymentStatus = order.payment_status || "pending";
           const installments = Number(order.installments || 1);
 
@@ -302,19 +303,17 @@ export default function AdminOrders() {
                       </p>
 
                       <span
-                        className={`rounded-full border px-3 py-1 text-xs font-black uppercase ${
-                          paymentStatusStyles[paymentStatus] ||
+                        className={`rounded-full border px-3 py-1 text-xs font-black uppercase ${paymentStatusStyles[paymentStatus] ||
                           paymentStatusStyles.pending
-                        }`}
+                          }`}
                       >
                         {paymentLabels[paymentStatus] || paymentStatus}
                       </span>
 
                       <span
-                        className={`rounded-full border px-3 py-1 text-xs font-black uppercase ${
-                          orderStatusStyles[order.status] ||
+                        className={`rounded-full border px-3 py-1 text-xs font-black uppercase ${orderStatusStyles[order.status] ||
                           orderStatusStyles.pendiente
-                        }`}
+                          }`}
                       >
                         {order.status}
                       </span>
@@ -359,6 +358,14 @@ export default function AdminOrders() {
                     <p className="font-bold text-white">
                       {order.customer_name}
                     </p>
+                    {order.customer_dni && (
+                      <p className="text-gray-300">
+                        DNI:{" "}
+                        <span className="font-bold text-white">
+                          {order.customer_dni}
+                        </span>
+                      </p>
+                    )}
 
                     <div className="flex items-start gap-2 text-gray-300">
                       <Phone className="mt-0.5 shrink-0" size={16} />
@@ -451,9 +458,9 @@ export default function AdminOrders() {
                       value={
                         order.paid_at
                           ? new Date(order.paid_at).toLocaleString("es-PE", {
-                              dateStyle: "short",
-                              timeStyle: "short",
-                            })
+                            dateStyle: "short",
+                            timeStyle: "short",
+                          })
                           : "—"
                       }
                     />
@@ -517,11 +524,10 @@ export default function AdminOrders() {
                           <p className="mt-1 text-xs text-gray-400">
                             Cantidad: {item.quantity}
                             {item.variant_value
-                              ? ` · ${
-                                  item.variant_type === "shoe_size"
-                                    ? "Número"
-                                    : "Talla"
-                                }: ${item.variant_value}`
+                              ? ` · ${item.variant_type === "shoe_size"
+                                ? "Número"
+                                : "Talla"
+                              }: ${item.variant_value}`
                               : ""}
                           </p>
 
