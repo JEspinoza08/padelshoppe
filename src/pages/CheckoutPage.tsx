@@ -38,6 +38,7 @@ export default function CheckoutPage() {
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [dni, setDni] = useState("");
   const [address, setAddress] = useState("");
   const [reference, setReference] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("tarjeta");
@@ -134,42 +135,59 @@ export default function CheckoutPage() {
       return false;
     }
 
-    if (!name || !phone || !department || !province || !district || !address) {
+    if (
+      !name.trim() ||
+      !dni ||
+      !phone ||
+      !department ||
+      !province ||
+      !district ||
+      !address.trim()
+    ) {
       setToast({
         type: "warning",
         title: "Datos incompletos",
         message:
-          "Completa nombre, celular, departamento, provincia, distrito y dirección.",
+          "Completa nombre, DNI, celular, departamento, provincia, distrito y dirección.",
+      });
+      return false;
+    }
+
+    if (!/^\d{8}$/.test(dni)) {
+      setToast({
+        type: "warning",
+        title: "DNI inválido",
+        message: "Ingresa un DNI válido de 8 dígitos.",
       });
       return false;
     }
 
     if (!/^\d+$/.test(phone)) {
-  setToast({
-    type: "warning",
-    title: "Celular inválido",
-    message: "El número de celular solo debe contener números.",
-  });
-  return false;
-}
+      setToast({
+        type: "warning",
+        title: "Celular inválido",
+        message: "El número de celular solo debe contener números.",
+      });
+      return false;
+    }
 
-if (phone.length !== 9) {
-  setToast({
-    type: "warning",
-    title: "Celular inválido",
-    message: "Ingresa un número de celular válido de 9 dígitos.",
-  });
-  return false;
-}
+    if (phone.length !== 9) {
+      setToast({
+        type: "warning",
+        title: "Celular inválido",
+        message: "Ingresa un número de celular válido de 9 dígitos.",
+      });
+      return false;
+    }
 
-if (address.trim().length < 8) {
-  setToast({
-    type: "warning",
-    title: "Dirección muy corta",
-    message: "La dirección debe tener como mínimo 8 caracteres.",
-  });
-  return false;
-}
+    if (address.trim().length < 8) {
+      setToast({
+        type: "warning",
+        title: "Dirección muy corta",
+        message: "La dirección debe tener como mínimo 8 caracteres.",
+      });
+      return false;
+    }
 
     if (cart.length === 0) {
       setToast({
@@ -184,110 +202,111 @@ if (address.trim().length < 8) {
   };
 
   const registerOrder = async (paymentData: any = null) => {
-  if (!user) return;
+    if (!user) return;
 
-  try {
-    const orderResult = await createOrder({
-  userId: user.id,
-  customer: {
-    name,
-    phone,
-    address,
-    department,
-    province,
-    district,
-    reference,
-  },
-  paymentMethod,
-  cart,
-  subtotal: totalPrice,
-  shippingCost,
-  totalPrice: finalTotal,
-  paymentData,
-});
-
-
-const firstResult = Array.isArray(orderResult)
-  ? orderResult[0]
-  : orderResult;
-
-const orderId =
-  typeof firstResult === "string"
-    ? firstResult
-    : firstResult?.id ??
-      firstResult?.order_id ??
-      firstResult?.create_complete_order ??
-      null;
-
-
-
-if (!orderId || typeof orderId !== "string") {
-  console.error(
-    "No se pudo obtener el UUID de la orden:",
-    orderResult,
-  );
-} else {
-  try {
-    const { data: emailData, error: emailError } =
-      await supabase.functions.invoke("send-order-email", {
-        body: {
-          orderId,
+    try {
+      const orderResult = await createOrder({
+        userId: user.id,
+        customer: {
+          name,
+          dni,
+          phone,
+          address,
+          department,
+          province,
+          district,
+          reference,
         },
+        paymentMethod,
+        cart,
+        subtotal: totalPrice,
+        shippingCost,
+        totalPrice: finalTotal,
+        paymentData,
       });
 
-    if (emailError) {
-      let functionError: unknown = null;
 
-      try {
-        functionError = await emailError.context?.json();
-      } catch {
-        functionError = emailError.message;
+      const firstResult = Array.isArray(orderResult)
+        ? orderResult[0]
+        : orderResult;
+
+      const orderId =
+        typeof firstResult === "string"
+          ? firstResult
+          : firstResult?.id ??
+          firstResult?.order_id ??
+          firstResult?.create_complete_order ??
+          null;
+
+
+
+      if (!orderId || typeof orderId !== "string") {
+        console.error(
+          "No se pudo obtener el UUID de la orden:",
+          orderResult,
+        );
+      } else {
+        try {
+          const { data: emailData, error: emailError } =
+            await supabase.functions.invoke("send-order-email", {
+              body: {
+                orderId,
+              },
+            });
+
+          if (emailError) {
+            let functionError: unknown = null;
+
+            try {
+              functionError = await emailError.context?.json();
+            } catch {
+              functionError = emailError.message;
+            }
+
+            console.error(
+              "La orden se creó, pero falló el correo:",
+              functionError,
+            );
+          } else {
+            console.log(
+              "Correo del pedido enviado:",
+              emailData,
+            );
+          }
+        } catch (emailError) {
+          console.error(
+            "Error invocando send-order-email:",
+            emailError,
+          );
+        }
       }
 
-      console.error(
-        "La orden se creó, pero falló el correo:",
-        functionError,
-      );
-    } else {
-      console.log(
-        "Correo del pedido enviado:",
-        emailData,
-      );
+      clearCart();
+
+      setToast({
+        type: "success",
+        title: "Pedido registrado",
+        message:
+          "Tu pedido se registró correctamente. Te llevaremos a tu cuenta.",
+      });
+
+      setTimeout(() => {
+        navigate("/mi-cuenta");
+      }, 1000);
+    } catch (error: any) {
+      console.error("ERROR REGISTRANDO PEDIDO:", error);
+
+      setToast({
+        type: "error",
+        title: "No se pudo registrar el pedido",
+        message:
+          error?.message ||
+          "Ocurrió un problema al registrar la compra o actualizar el stock.",
+      });
+
+      throw error;
     }
-  } catch (emailError) {
-    console.error(
-      "Error invocando send-order-email:",
-      emailError,
-    );
-  }
-}
-
-    clearCart();
-
-    setToast({
-      type: "success",
-      title: "Pedido registrado",
-      message:
-        "Tu pedido se registró correctamente. Te llevaremos a tu cuenta.",
-    });
-
-    setTimeout(() => {
-      navigate("/mi-cuenta");
-    }, 1000);
-  } catch (error: any) {
-    console.error("ERROR REGISTRANDO PEDIDO:", error);
-
-    setToast({
-      type: "error",
-      title: "No se pudo registrar el pedido",
-      message:
-        error?.message ||
-        "Ocurrió un problema al registrar la compra o actualizar el stock.",
-    });
-
-    throw error;
-  }
-};
+  };
 
   const payWithCulqi = async (tokenId: string) => {
     if (!user?.email) return;
@@ -303,11 +322,12 @@ if (!orderId || typeof orderId !== "string") {
             description: `Compra PadelShop - ${name}`,
             installments: Number(
               window.Culqi?.token?.metadata?.installments ??
-                window.Culqi?.token?.installments ??
-                1,
+              window.Culqi?.token?.installments ??
+              1,
             ),
             metadata: {
               customer_name: name,
+              customer_dni: dni,
               customer_phone: phone,
               payment_method: "tarjeta",
             },
@@ -326,8 +346,8 @@ if (!orderId || typeof orderId !== "string") {
       if (error || !data?.ok) {
         throw new Error(
           data?.error ||
-            error?.message ||
-            "Culqi rechazó o no procesó el pago.",
+          error?.message ||
+          "Culqi rechazó o no procesó el pago.",
         );
       }
 
@@ -421,7 +441,7 @@ if (!orderId || typeof orderId !== "string") {
 
   return (
     <div className="min-h-screen bg-white">
-      <Header onSearch={() => {}} />
+      <Header onSearch={() => { }} />
       {toast && (
         <Toast
           type={toast.type}
@@ -461,74 +481,88 @@ if (!orderId || typeof orderId !== "string") {
             <h2 className="text-xl font-black">Datos de entrega</h2>
 
             <div className="mt-6 grid gap-4 md:grid-cols-2">
-  <input
-    value={name}
-    onChange={(e) => setName(e.target.value)}
-    className="rounded-xl border p-4"
-    placeholder="Nombre completo"
-  />
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="rounded-xl border p-4"
+                placeholder="Nombre completo"
+              />
 
-  <input
-  type="tel"
-  inputMode="numeric"
-  value={phone}
-  onChange={(e) => {
-    const onlyNumbers = e.target.value.replace(/\D/g, "");
-    setPhone(onlyNumbers.slice(0, 9));
-  }}
-  className="rounded-xl border p-4"
-  placeholder="Celular"
-  maxLength={9}
-/>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={dni}
+                onChange={(e) => {
+                  const onlyNumbers = e.target.value.replace(/\D/g, "");
+                  setDni(onlyNumbers.slice(0, 8));
+                }}
+                className="rounded-xl border p-4"
+                placeholder="DNI"
+                maxLength={8}
+                autoComplete="off"
+              />
 
-  <CustomSelect
-    value={department}
-    placeholder="Departamento"
-    options={departments.map((item) => ({
-      value: item,
-      label: item,
-    }))}
-    onChange={setDepartment}
-  />
+              <input
+                type="tel"
+                inputMode="numeric"
+                value={phone}
+                onChange={(e) => {
+                  const onlyNumbers = e.target.value.replace(/\D/g, "");
+                  setPhone(onlyNumbers.slice(0, 9));
+                }}
+                className="rounded-xl border p-4"
+                placeholder="Celular"
+                maxLength={9}
+              />
 
-  <CustomSelect
-    value={province}
-    placeholder="Provincia"
-    options={provinces.map((item) => ({
-      value: item,
-      label: item,
-    }))}
-    onChange={setProvince}
-    disabled={!department}
-  />
+              <CustomSelect
+                value={department}
+                placeholder="Departamento"
+                options={departments.map((item) => ({
+                  value: item,
+                  label: item,
+                }))}
+                onChange={setDepartment}
+              />
 
-  <CustomSelect
-    value={district}
-    placeholder="Distrito"
-    options={districts.map((item) => ({
-      value: item.district,
-      label: item.district,
-    }))}
-    onChange={setDistrict}
-    disabled={!province}
-    className="md:col-span-2"
-  />
+              <CustomSelect
+                value={province}
+                placeholder="Provincia"
+                options={provinces.map((item) => ({
+                  value: item,
+                  label: item,
+                }))}
+                onChange={setProvince}
+                disabled={!department}
+              />
 
-  <input
-  value={address}
-  onChange={(e) => setAddress(e.target.value)}
-  className="rounded-xl border p-4 md:col-span-2"
-  placeholder="Dirección / domicilio"
-  minLength={8}
-/>
+              <CustomSelect
+                value={district}
+                placeholder="Distrito"
+                options={districts.map((item) => ({
+                  value: item.district,
+                  label: item.district,
+                }))}
+                onChange={setDistrict}
+                disabled={!province}
+                className="md:col-span-2"
+              />
 
-  <input
-    value={reference}
-    onChange={(e) => setReference(e.target.value)}
-    className="rounded-xl border p-4"
-    placeholder="Referencia"
-  />
-</div>
+              <input
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                className="rounded-xl border p-4 md:col-span-2"
+                placeholder="Dirección / domicilio"
+                minLength={8}
+              />
+
+              <input
+                value={reference}
+                onChange={(e) => setReference(e.target.value)}
+                className="rounded-xl border p-4"
+                placeholder="Referencia"
+              />
+            </div>
 
             <h2 className="mt-8 text-xl font-black">Método de pago</h2>
 

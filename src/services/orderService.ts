@@ -18,10 +18,15 @@ export async function createOrder({
     throw new Error("El carrito está vacío.");
   }
 
+  if (!/^\d{8}$/.test(customer?.dni ?? "")) {
+  throw new Error("El DNI debe contener exactamente 8 dígitos.");
+}
+
   const orderData = {
     user_id: userId,
 
     customer_name: customer.name,
+    customer_dni: customer.dni,
     customer_phone: customer.phone,
     customer_address: customer.address,
     customer_department: customer.department,
