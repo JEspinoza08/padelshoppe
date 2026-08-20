@@ -23,6 +23,7 @@ const emptyProduct: ProductFormValues = {
   stock: 0,
   has_variants: false,
   product_variants: [],
+  product_images: [],
   is_active: true,
 };
 
@@ -43,7 +44,8 @@ export default function AdminDashboard() {
       .select(
         `
   *,
-  product_variants (*)
+  product_variants (*),
+  product_images (*)
 `,
       )
       .order("updated_at", { ascending: false });
@@ -145,6 +147,39 @@ export default function AdminDashboard() {
         .from("product_variants")
         .delete()
         .eq("product_id", productId);
+
+      const galleryImages = values.product_images || [];
+
+      const { error: galleryDeleteError } = await supabase
+        .from("product_images")
+        .delete()
+        .eq("product_id", productId);
+
+      if (galleryDeleteError) {
+        alert(galleryDeleteError.message);
+        return;
+      }
+
+      if (galleryImages.length > 0) {
+        const cleanImages = galleryImages
+          .filter((image) => image.image_url.trim() !== "")
+          .map((image, index) => ({
+            product_id: productId,
+            image_url: image.image_url,
+            sort_order: index,
+          }));
+
+        if (cleanImages.length > 0) {
+          const { error: galleryInsertError } = await supabase
+            .from("product_images")
+            .insert(cleanImages);
+
+          if (galleryInsertError) {
+            alert(galleryInsertError.message);
+            return;
+          }
+        }
+      }
 
       if (values.has_variants && variants.length > 0) {
         const cleanVariants = variants

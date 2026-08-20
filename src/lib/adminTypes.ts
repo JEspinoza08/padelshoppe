@@ -7,6 +7,13 @@ export type AdminProductVariant = {
   is_active: boolean;
 };
 
+export type AdminProductImage = {
+  id?: string;
+  product_id?: string;
+  image_url: string;
+  sort_order: number;
+};
+
 export type AdminProduct = {
   id: string;
   name: string;
@@ -29,6 +36,7 @@ export type AdminProduct = {
   created_at?: string;
   updated_at?: string;
   product_variants?: AdminProductVariant[];
+  product_images?: AdminProductImage[];
 };
 
 export type ProductFormValues = Omit<

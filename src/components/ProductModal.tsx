@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { X, ShoppingCart, Check, Star } from "lucide-react";
+import { X, ShoppingCart, Check, Star, ChevronLeft, ChevronRight } from "lucide-react";
 import { Product } from "../data/products";
 import { useCart } from "../context/CartContext";
 import Toast from "./Toast";
@@ -24,6 +24,13 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
   }, [product, onClose]);
   const { addToCart } = useCart();
   const [selectedVariantId, setSelectedVariantId] = useState("");
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+
+  useEffect(() => {
+    setSelectedVariantId("");
+    setSelectedImageIndex(0);
+  }, [product?.id]);
+
   const [toast, setToast] = useState<{
   type: "success" | "error" | "warning" | "info";
   title: string;
@@ -31,6 +38,19 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
 } | null>(null);
 
   if (!product) return null;
+
+  const galleryImages = Array.from(
+    new Set([product.image, ...(product.images || [])].filter(Boolean)),
+  );
+  const activeImage = galleryImages[selectedImageIndex] || product.image;
+  const showPreviousImage = () =>
+    setSelectedImageIndex((current) =>
+      current === 0 ? galleryImages.length - 1 : current - 1,
+    );
+  const showNextImage = () =>
+    setSelectedImageIndex((current) =>
+      current === galleryImages.length - 1 ? 0 : current + 1,
+    );
 
   const availableVariants =
     product.variants?.filter((v) => v.isActive && v.stock > 0) || [];
@@ -61,22 +81,47 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
           <X size={20} />
         </button>
         <div className="grid lg:grid-cols-2">
-          <div className="bg-neutral-50 p-6 lg:p-10">
-            <div className="grid gap-4 sm:grid-cols-[70px_1fr] sm:gap-5">
-              <div className="hidden space-y-3 sm:block">
-                <div className="rounded-lg border border-[#f04b2f] bg-white p-2">
-                  <img
-                    src={product.image}
-                    className="aspect-square object-contain"
-                  />
+          <div className="bg-neutral-50 p-5 sm:p-6 lg:p-10">
+            <div className="grid gap-4 sm:grid-cols-[76px_1fr] sm:gap-5">
+              {galleryImages.length > 1 && (
+                <div className="order-2 flex gap-2 overflow-x-auto pb-1 sm:order-1 sm:block sm:space-y-3 sm:overflow-visible sm:pb-0">
+                  {galleryImages.map((image, index) => (
+                    <button
+                      type="button"
+                      key={`${image}-${index}`}
+                      onClick={() => setSelectedImageIndex(index)}
+                      className={`shrink-0 rounded-xl border-2 bg-white p-2 transition ${
+                        selectedImageIndex === index
+                          ? "border-[#f04b2f] shadow-sm"
+                          : "border-transparent hover:border-neutral-200"
+                      }`}
+                    >
+                      <img src={image} alt={`${product.name} - foto ${index + 1}`} className="h-14 w-14 object-contain" />
+                    </button>
+                  ))}
                 </div>
-              </div>
-              <div className="grid min-h-[260px] place-items-center sm:min-h-[420px]">
+              )}
+
+              <div className="relative order-1 grid min-h-[280px] place-items-center sm:order-2 sm:min-h-[420px]">
                 <img
-                  src={product.image}
+                  src={activeImage}
                   alt={product.name}
-                  className="max-h-[260px] w-full object-contain sm:max-h-[520px]"
+                  className="max-h-[300px] w-full object-contain transition sm:max-h-[520px]"
                 />
+
+                {galleryImages.length > 1 && (
+                  <>
+                    <button type="button" onClick={showPreviousImage} aria-label="Foto anterior" className="absolute left-0 grid h-10 w-10 place-items-center rounded-full bg-white/95 text-neutral-900 shadow-lg transition hover:scale-105 sm:left-2">
+                      <ChevronLeft size={22} />
+                    </button>
+                    <button type="button" onClick={showNextImage} aria-label="Foto siguiente" className="absolute right-0 grid h-10 w-10 place-items-center rounded-full bg-white/95 text-neutral-900 shadow-lg transition hover:scale-105 sm:right-2">
+                      <ChevronRight size={22} />
+                    </button>
+                    <span className="absolute bottom-1 right-1 rounded-full bg-neutral-950/80 px-3 py-1 text-xs font-bold text-white">
+                      {selectedImageIndex + 1} / {galleryImages.length}
+                    </span>
+                  </>
+                )}
               </div>
             </div>
           </div>

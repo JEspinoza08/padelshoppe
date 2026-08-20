@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 
 import Home from "./pages/Home";
 import Palas from "./pages/Palas";
@@ -24,10 +24,15 @@ import About from "./pages/About";
 import Faq from "./pages/Faq";
 import ClaimsBook from "./pages/ClaimsBook";
 import AdminProtectedRoute from "../src/components/AdminProtectedRoute";
+import FloatingWhatsApp from "./components/FloatingWhatsApp";
 
 
 function App() {
+  const location = useLocation();
+  const showWhatsApp = !location.pathname.startsWith("/admin");
+
   return (
+    <>
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/palas" element={<Palas />} />
@@ -59,6 +64,8 @@ function App() {
         <Route path="/admin/orders" element={<AdminOrdersPage />} />
       </Route>
     </Routes>
+    {showWhatsApp && <FloatingWhatsApp />}
+    </>
   );
 }
 

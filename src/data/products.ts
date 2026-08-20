@@ -38,6 +38,7 @@ export interface Product {
   originalPrice?: number;
   label: Label;
   image: string;
+  images?: string[];
   description: string;
   features: string[];
   recommendedFor: string;

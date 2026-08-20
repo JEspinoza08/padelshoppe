@@ -167,10 +167,8 @@ export default function AdminProductForm({ product, onClose, onSave }: Props) {
     }));
   };
 
-  const handleImageUpload = async (file: File) => {
-    setUploading(true);
-
-    const ext = file.name.split(".").pop();
+  const uploadImage = async (file: File) => {
+    const ext = file.name.split(".").pop() || "webp";
     const fileName = `productos/${crypto.randomUUID()}.${ext}`;
 
     const { error } = await supabase.storage
@@ -180,16 +178,74 @@ export default function AdminProductForm({ product, onClose, onSave }: Props) {
         upsert: false,
       });
 
-    if (error) {
-      alert(error.message);
-      setUploading(false);
-      return;
-    }
+    if (error) throw error;
 
     const { data } = supabase.storage.from("productos").getPublicUrl(fileName);
+    return data.publicUrl;
+  };
 
-    setField("image_url", data.publicUrl);
-    setUploading(false);
+  const handleImageUpload = async (files: FileList | File[]) => {
+    const selectedFiles = Array.from(files);
+    if (selectedFiles.length === 0) return;
+
+    setUploading(true);
+
+    try {
+      const uploadedUrls = await Promise.all(selectedFiles.map(uploadImage));
+
+      setValues((prev) => {
+        const currentGallery = prev.product_images || [];
+        const nextMainImage = prev.image_url || uploadedUrls[0];
+        const galleryUrls = prev.image_url ? uploadedUrls : uploadedUrls.slice(1);
+
+        return {
+          ...prev,
+          image_url: nextMainImage,
+          product_images: [
+            ...currentGallery,
+            ...galleryUrls.map((image_url, index) => ({
+              image_url,
+              sort_order: currentGallery.length + index,
+            })),
+          ],
+        };
+      });
+    } catch (error: any) {
+      alert(error?.message || "No se pudieron subir las imágenes.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removeGalleryImage = (index: number) => {
+    setValues((prev) => ({
+      ...prev,
+      product_images: (prev.product_images || [])
+        .filter((_, imageIndex) => imageIndex !== index)
+        .map((image, imageIndex) => ({ ...image, sort_order: imageIndex })),
+    }));
+  };
+
+  const setAsMainImage = (index: number) => {
+    setValues((prev) => {
+      const gallery = [...(prev.product_images || [])];
+      const selected = gallery[index];
+      if (!selected) return prev;
+
+      gallery.splice(index, 1);
+      if (prev.image_url) {
+        gallery.unshift({ image_url: prev.image_url, sort_order: 0 });
+      }
+
+      return {
+        ...prev,
+        image_url: selected.image_url,
+        product_images: gallery.map((image, imageIndex) => ({
+          ...image,
+          sort_order: imageIndex,
+        })),
+      };
+    });
   };
 
   const toggleLevel = (level: string) => {
@@ -387,37 +443,60 @@ export default function AdminProductForm({ product, onClose, onSave }: Props) {
             </select>
           </Field>
 
-          <Field label="Imagen del producto">
-            <div className="space-y-3">
+          <Field label="Fotos del producto">
+            <div className="space-y-4">
               <label className="flex items-center justify-center gap-2 cursor-pointer rounded-xl border border-dashed border-white/20 bg-white/5 hover:bg-white/10 px-4 py-4 text-sm text-gray-300">
                 <ImagePlus size={18} />
-                {uploading ? "Subiendo imagen..." : "Seleccionar imagen"}
+                {uploading ? "Subiendo fotos..." : "Seleccionar una o varias fotos"}
                 <input
                   type="file"
                   accept="image/*"
+                  multiple
                   disabled={uploading}
                   onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) handleImageUpload(file);
+                    if (e.target.files?.length) handleImageUpload(e.target.files);
+                    e.currentTarget.value = "";
                   }}
                   className="hidden"
                 />
               </label>
 
+              <p className="text-xs text-gray-500">
+                La primera foto será la portada. Puedes subir varias a la vez y cambiar la portada cuando quieras.
+              </p>
+
               {values.image_url && (
-                <div className="flex items-center gap-3">
-                  <img
-                    src={values.image_url}
-                    alt="Vista previa"
-                    className="w-20 h-20 rounded-xl object-cover border border-white/10 bg-zinc-800"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setField("image_url", "")}
-                    className="text-sm text-red-300 hover:text-red-200"
-                  >
-                    Quitar imagen
-                  </button>
+                <div>
+                  <p className="mb-2 text-xs font-bold uppercase tracking-wide text-gray-400">Portada</p>
+                  <div className="relative w-28 overflow-hidden rounded-xl border border-[#f04b2f]/60 bg-zinc-800 p-2">
+                    <img
+                      src={values.image_url}
+                      alt="Portada del producto"
+                      className="h-24 w-full object-contain"
+                    />
+                    <span className="absolute left-2 top-2 rounded-md bg-[#f04b2f] px-2 py-1 text-[10px] font-black uppercase text-white">Principal</span>
+                  </div>
+                </div>
+              )}
+
+              {(values.product_images || []).length > 0 && (
+                <div>
+                  <p className="mb-2 text-xs font-bold uppercase tracking-wide text-gray-400">Galería adicional</p>
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                    {(values.product_images || []).map((image, index) => (
+                      <div key={`${image.image_url}-${index}`} className="rounded-xl border border-white/10 bg-zinc-800 p-2">
+                        <img src={image.image_url} alt={`Foto ${index + 2}`} className="h-24 w-full rounded-lg object-contain" />
+                        <div className="mt-2 flex gap-2">
+                          <button type="button" onClick={() => setAsMainImage(index)} className="flex-1 rounded-lg bg-white/10 px-2 py-2 text-[11px] font-bold text-white hover:bg-white/15">
+                            Hacer portada
+                          </button>
+                          <button type="button" onClick={() => removeGalleryImage(index)} aria-label="Quitar foto" className="rounded-lg bg-red-500/10 p-2 text-red-300 hover:bg-red-500/20">
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

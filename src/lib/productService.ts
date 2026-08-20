@@ -26,7 +26,8 @@ async function fetchProducts(): Promise<Product[]> {
       .from("products")
       .select(`
         *,
-        product_variants (*)
+        product_variants (*),
+        product_images (*)
       `)
       .eq("is_active", true)
       .order("created_at", { ascending: false })
@@ -43,6 +44,10 @@ async function fetchProducts(): Promise<Product[]> {
       originalPrice: p.original_price ? Number(p.original_price) : undefined,
       label: p.label,
       image: p.image_url,
+      images: (p.product_images || [])
+        .sort((a: any, b: any) => Number(a.sort_order || 0) - Number(b.sort_order || 0))
+        .map((img: any) => img.image_url)
+        .filter(Boolean),
       description: p.description,
       features: p.features || [],
       recommendedFor: p.recommended_for,
